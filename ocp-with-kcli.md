@@ -208,11 +208,9 @@
 	oc logs -f -n openshift-machine-api metal3-65c8d9b84b-clwdr -c metal3-static-ip-set
 	+ /usr/sbin/ip address flush dev ens3
 	Device “ens3” does not exist.
-	Looks like the interface id was not ens3, also due to NUMA introduced extra pci slot
-	
-	
 	``` 
-	
+	Looks like the interface id was not ens3, also due to NUMA introduced extra pci slot
+
 	```xml
 	<controller type='pci' index='1' model='pci-expander-bus'>
       <model name='pxb'/>
