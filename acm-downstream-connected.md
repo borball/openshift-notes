@@ -359,3 +359,9 @@
 Open `https://multicloud-console.apps.<cluster_name>.<base_domain>`. 
 
  
+### Enable FeatureGate AlphaAgentInstallStrategy 
+
+```shell
+oc patch hiveconfig hive --type merge -p '{"spec":{"targetNamespace":"hive","logLevel":"debug","featureGates":{"custom":{"enabled":["AlphaAgentInstallStrategy"]},"featureSet":"Custom"}}}'
+```
+

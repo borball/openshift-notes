@@ -162,3 +162,54 @@
 	```
 	
 ### Spoke Clusters
+
+- Create NS
+
+	```shell
+	oc create ns spoke-cluster1
+	oc project spoke-cluster1
+	
+	```
+
+- Create Pull Secret
+
+	```yaml
+	apiVersion: v1
+	kind: Secret
+	metadata:
+	  name: assisted-deployment-pull-secret
+	  namespace: spoke-cluster1
+	stringData:
+	  .dockerconfigjson: '{"auths":{"cloud.openshift.com":{"auth":"b3BlbnNoaWZ0LXJlbGVhc2UtZGV2K29jbV9hY2Nlc3NfNDdjYWRhMzI2Y2EwNGViM2FlNjJiZGFmYzAwZGI1YWU6RTk2MTNWVjhHU1VHRlpQQjhaTTg1NlRRUUJTTFBPWk9XUDhTUjdVVDE1V0E1TzM0VVRJUllDMDRKTUswTFNNOQ==","email":"bzhai@redhat.com"},"quay.io":{"auth":"b3BlbnNoaWZ0LXJlbGVhc2UtZGV2K29jbV9hY2Nlc3NfNDdjYWRhMzI2Y2EwNGViM2FlNjJiZGFmYzAwZGI1YWU6RTk2MTNWVjhHU1VHRlpQQjhaTTg1NlRRUUJTTFBPWk9XUDhTUjdVVDE1V0E1TzM0VVRJUllDMDRKTUswTFNNOQ==","email":"bzhai@redhat.com"},"registry.connect.redhat.com":{"auth":"fHVoYy1wb29sLWE3MmRjZmI2LTQ1Y2YtNGZmNi1iNDgyLTQ4Zjg0ZmE5ZmY4ZDpleUpoYkdjaU9pSlNVelV4TWlKOS5leUp6ZFdJaU9pSXdaREZtWkdJd05qTmpaV0UwTURJNU9HSmlPVEl6TVRCbE1tSTVaRGRpWWlKOS5SUngteDlwZWt0bW1OaGJpQ2V1WWdFeGg2Zm9VUk1fbm02U2k1YnViUHpFN21pQlNKR2lZSlFRTEFIQmlMTUc3eVBZQlptdzRKUEoySFltOVZHZXlmbmhnZHNZQVdzbGgwUFkxNklhekQzWmpqRzc2djlhSzdxTmFJVTdiWnVfVjR6YjZxYkhCdHY0WTJaVm9uRlRHU0JDN3ktLTNVR280NGlIcTNWZW94Z015R0xpVDJ2VFdBajdOdVhKSXdnV1o2RHZkMjd1WFpOVlNLN3F6ZWM3bjNDWWdMNzlwNVVQbUtkOV95LWxhaDZIdDA2NXRacjdjZTNRcHJ6OW1OVFo4SERxS3VHcklsX2dHaE03ZmlpcGcwampjOEVvZUlQa0xCUkJpN2U1NEo2VEZmLUwwQmROc1Jpdjg0VS1IZ0FSSTg0WURnVVV2Z0d1OE9NcjJ5aXdDOThpZVhRemFSVFFYcG5HdHdraDk1MlJjYmJqUXdZS0Zfa09jazVvR0NxN1dUV2dOSllDQkI4WWlWZlVncHRfcGR0Z19ldXhxZEtPaF9adWFtM2NGNy1XbDVuRmpubHBEbFNMeDJocHYwbmZCQlFrcjVQTmxRZzc2cko5WF9xS2dEWE16clA1RUZUMVd4cmQ0b1RFTFQ0QlNTTS1KLUszbWJhZ2R1UHBoVDBqSFk0TUN3T2JVeUp4QUg3cnZTMUVndl9pMGdjYWh4MWFHcXBVc1BHWVVBTlFkWDFNUm5HT0JSY2E5MC0wUFZ4czJrYmNTWjdGSVFIaV9XVEZ4UWRNVzc3enF4LWM2dzFKWlpNdmNUTzNOYk0ySVU2VWJaTFhPb0k5WVpaYzFzSG5UcU1kOTUtWVdWc3l2NDFDM0plakdYWUdOTTgxSmRKX05oUmZZeXZya1BqWQ==","email":"bzhai@redhat.com"},"registry.redhat.io":{"auth":"fHVoYy1wb29sLWE3MmRjZmI2LTQ1Y2YtNGZmNi1iNDgyLTQ4Zjg0ZmE5ZmY4ZDpleUpoYkdjaU9pSlNVelV4TWlKOS5leUp6ZFdJaU9pSXdaREZtWkdJd05qTmpaV0UwTURJNU9HSmlPVEl6TVRCbE1tSTVaRGRpWWlKOS5SUngteDlwZWt0bW1OaGJpQ2V1WWdFeGg2Zm9VUk1fbm02U2k1YnViUHpFN21pQlNKR2lZSlFRTEFIQmlMTUc3eVBZQlptdzRKUEoySFltOVZHZXlmbmhnZHNZQVdzbGgwUFkxNklhekQzWmpqRzc2djlhSzdxTmFJVTdiWnVfVjR6YjZxYkhCdHY0WTJaVm9uRlRHU0JDN3ktLTNVR280NGlIcTNWZW94Z015R0xpVDJ2VFdBajdOdVhKSXdnV1o2RHZkMjd1WFpOVlNLN3F6ZWM3bjNDWWdMNzlwNVVQbUtkOV95LWxhaDZIdDA2NXRacjdjZTNRcHJ6OW1OVFo4SERxS3VHcklsX2dHaE03ZmlpcGcwampjOEVvZUlQa0xCUkJpN2U1NEo2VEZmLUwwQmROc1Jpdjg0VS1IZ0FSSTg0WURnVVV2Z0d1OE9NcjJ5aXdDOThpZVhRemFSVFFYcG5HdHdraDk1MlJjYmJqUXdZS0Zfa09jazVvR0NxN1dUV2dOSllDQkI4WWlWZlVncHRfcGR0Z19ldXhxZEtPaF9adWFtM2NGNy1XbDVuRmpubHBEbFNMeDJocHYwbmZCQlFrcjVQTmxRZzc2cko5WF9xS2dEWE16clA1RUZUMVd4cmQ0b1RFTFQ0QlNTTS1KLUszbWJhZ2R1UHBoVDBqSFk0TUN3T2JVeUp4QUg3cnZTMUVndl9pMGdjYWh4MWFHcXBVc1BHWVVBTlFkWDFNUm5HT0JSY2E5MC0wUFZ4czJrYmNTWjdGSVFIaV9XVEZ4UWRNVzc3enF4LWM2dzFKWlpNdmNUTzNOYk0ySVU2VWJaTFhPb0k5WVpaYzFzSG5UcU1kOTUtWVdWc3l2NDFDM0plakdYWUdOTTgxSmRKX05oUmZZeXZya1BqWQ==","email":"bzhai@redhat.com"},"bzhai-hive.e2e.bos.redhat.com:5000":{"auth":"YWRtaW46YWRtaW4xMjM=","email":"kni@redhat.com"},"quay.io:443":{"auth":"YnpoYWk6QkNVSFltYjhLSTNDM3gvUVRJcm9sRU1NU2xKOGpJZDR6M0ZkK3FTa3hCZGVXZTRrL0xrRi9yaXpaWk9lVVYyQg==","email":""}}}'
+	
+	```
+	
+- Create AgentClusterInstall
+
+	```yaml
+	apiVersion: extensions.hive.openshift.io/v1beta1
+	kind: AgentClusterInstall
+	metadata:
+	  name: spoke-cluster1
+	  namespace: spoke-cluster1
+	spec:
+	  clusterDeploymentRef:
+	    name: spoke-cluster1
+	  imageSetRef:
+	    name: openshift-v4.8.0
+	  networking:
+	    clusterNetwork:
+	      - cidr: "10.128.0.0/14"
+	        hostPrefix: 23
+	    serviceNetwork:
+	      - "172.30.0.0/16"
+	    machineNetwork:
+	      - cidr: "10.19.142.0/23"
+	  provisionRequirements:
+	    controlPlaneAgents: 1
+	  sshPublicKey: ""
+	
+	```
+	
+
+	
