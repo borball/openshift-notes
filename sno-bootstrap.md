@@ -9,71 +9,70 @@
 	- base domain
 	- pull secret
 
-- There are some work around to customize more for your cluster if necessary:
-	- Call assisted-service rest API: [[2]](https://github.com/openshift/assisted-service/blob/master/docs/user-guide/restful-api-guide.md)
-	- Use command line tool: [[3]](https://github.com/karmab/assisted-installer-cli)
+- There are some work around to customize more for your cluster if necessary, the way works is to call the assisted-service API, either:
+	- Call assisted-service REST API via curl: [[2]](https://github.com/openshift/assisted-service/blob/master/docs/user-guide/restful-api-guide.md)
+	- Use command line tool: [[3]](https://github.com/karmab/assisted-installer-cli), which is a wrapper of the REST API
 	
   We used the second way to:
   
    - Configure work load partitioning [[4]](https://github.com/openshift/enhancements/blob/master/enhancements/workload-partitioning/management-workload-partitioning.md#example-manifests)
+     
+     ```shell
+     aicli create manifests --dir /workdir/ai-manifests/ <your cluster name>
+     ```
+     
    - Set static IP address [[5]](https://docs.openshift.com/container-platform/4.8/networking/k8s_nmstate/k8s-nmstate-updating-node-network-config.html#virt-example-nmstate-IP-management-static_k8s_nmstate-updating-node-network-config)
    
+   		Example of static IP configuration:
+   
+	   ```yaml
+	   kni@bzhai-hive ~/.aicli $ cat aicli-parameters.yaml 
+		static_network_config:
+		- interfaces:
+		    - name: eno1
+		      type: ethernet
+		      state: up
+		      ethernet:
+		        auto-negotiation: true
+		        duplex: full
+		        speed: 1000
+		      ipv4:
+		        address:
+		        - ip: 10.19.142.216
+		          prefix-length: 21
+		        enabled: true
+		      mtu: 1500
+		      mac-address: 3c:ec:ef:1c:f1:b8
+		  dns-resolver:
+		    config:
+		      server:
+		      - 10.19.143.247
+		  routes:
+		    config:
+		    - destination: 10.19.136.0/21
+		      next-hop-address: 10.19.143.254
+		      next-hop-interface: eno1
+	   ```
+   
+	   ```shell
+	   aicli create iso -m --paramfile ./aicli-parameters.yaml <your cluster name>
+	   ```
+   - Check cluster info
+   
+   		```shell
+   		aicli info cluster <your cluster name>
+   		```
 
-	Those customized information/manifests together with the cluster basic information will be used to generate the ignition file inside the discovery ISO.
+	Some of those customized information/manifests together with the cluster basic information will be used to generate the ignition file inside the discovery ISO.
 	
 - Generate the discovery ISO
-- Download the ISO and boot the server
+- Download the ISO
+- Mount the ISO as a virtual image on the server and boot the server from the virtual image.
 
-#### Cluster Info
-
-After steps above, the cluster information is showing as below, 
-
-```ini
-kni@bzhai-hive ~ $ aicli info cluster sno-ai-test --full
-Using https://api.openshift.com as base url
-ams_subscription_id: 1wu1KWDbfnDjvuuKPn2VGckErQu
-base_dns_domain: cloud.lab.eng.bos.redhat.com
-cluster_network_cidr: 10.128.0.0/14
-cluster_network_host_prefix: 23
-connectivity_majority_groups: {"IPv4":[],"IPv6":[]}
-controller_logs_collected_at: 0001-01-01 00:00:00+00:00
-controller_logs_started_at: 0001-01-01 00:00:00+00:00
-created_at: 2021-08-18 13:33:14.880000+00:00
-email_domain: redhat.com
-feature_usage: {"SNO":{"name":"SNO"}}
-high_availability_mode: None
-host_networks: []
-hosts: []
-href: /api/assisted-install/v1/clusters/0b9959f6-5db8-4787-ad6e-0bb876f8e649
-hyperthreading: all
-id: 0b9959f6-5db8-4787-ad6e-0bb876f8e649
-image_info: {'ssh_public_key': '', 'size_bytes': 107884544, 'download_url': 'https://s3.us-east-1.amazonaws.com/assisted-installer/discovery-image-0b9959f6-5db8-4787-ad6e-0bb876f8e649.iso?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA52ZYGBOVI2P2TOEQ%2F20210818%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20210818T133830Z&X-Amz-Expires=14400&X-Amz-SignedHeaders=host&response-content-disposition=attachment%3Bfilename%3Ddiscovery-image-0b9959f6-5db8-4787-ad6e-0bb876f8e649.iso&X-Amz-Signature=5d86b9543f2461f18dfc92eb592916f8e592368df0d6a4d39e59cf44e00d2229', 'generator_version': None, 'created_at': datetime.datetime(2021, 8, 18, 13, 38, 27, 217000, tzinfo=tzlocal()), 'expires_at': datetime.datetime(2021, 8, 18, 17, 38, 27, 217000, tzinfo=tzlocal()), 'static_network_config': 'dns-resolver:\n  config:\n    server:\n    - 10.19.143.247\ninterfaces:\n- ethernet:\n    auto-negotiation: true\n    duplex: full\n    speed: 1000\n  ipv4:\n    address:\n    - ip: 10.19.142.219\n      prefix-length: 21\n    enabled: true\n  mac-address: 3c:ec:ef:1c:f1:b8\n  mtu: 1500\n  name: eno1\n  state: up\n  type: ethernet\nroutes:\n  config:\n  - destination: 10.19.136.0/21\n    next-hop-address: 10.19.143.254\n    next-hop-interface: eno1\n  - destination: 0.0.0.0/0\n    next-hop-address: 10.19.143.254\n    next-hop-interface: eno1\n    table-id: 254\nHHHHH3c:ec:ef:1c:f1:b8=eno1', 'type': 'minimal-iso'}
-install_completed_at: 2000-01-01 00:00:00+00:00
-install_config_overrides: {"networking": {"networkType": "OVNKubernetes"}}
-install_started_at: 2000-01-01 00:00:00+00:00
-kind: Cluster
-monitored_operators: [{'cluster_id': '0b9959f6-5db8-4787-ad6e-0bb876f8e649', 'name': 'console', 'namespace': None, 'subscription_name': None, 'operator_type': 'builtin', 'properties': None, 'timeout_seconds': 3600, 'status': None, 'status_info': None, 'status_updated_at': datetime.datetime(1, 1, 1, 0, 0, tzinfo=tzlocal())}, {'cluster_id': '0b9959f6-5db8-4787-ad6e-0bb876f8e649', 'name': 'cvo', 'namespace': None, 'subscription_name': None, 'operator_type': 'builtin', 'properties': None, 'timeout_seconds': 3600, 'status': None, 'status_info': None, 'status_updated_at': datetime.datetime(1, 1, 1, 0, 0, tzinfo=tzlocal())}]
-name: sno-ai-test
-ocp_release_image: quay.io/openshift-release-dev/ocp-release:4.8.2-x86_64
-openshift_version: 4.8.2
-org_id: 11009103
-platform: {'type': 'baremetal', 'vsphere': {'username': None, 'password': None, 'datacenter': None, 'v_center': None, 'cluster': None, 'default_datastore': None, 'network': None, 'folder': None}}
-progress: {'total_percentage': None, 'preparing_for_installation_stage_percentage': None, 'installing_stage_percentage': None, 'finalizing_stage_percentage': None}
-pull_secret_set: True
-schedulable_masters: False
-service_network_cidr: 172.30.0.0/16
-status: pending-for-input
-status_info: User input required
-status_updated_at: 2021-08-18 13:33:24.049000+00:00
-updated_at: 2021-08-18 13:38:27.218000+00:00
-user_managed_networking: True
-user_name: bzhai@redhat.com
-validations_info: {"configuration":[{"id":"pull-secret-set","status":"success","message":"The pull secret is set."}],"hosts-data":[{"id":"all-hosts-are-ready-to-install","status":"success","message":"All hosts in the cluster are ready to install."},{"id":"sufficient-masters-count","status":"failure","message":"Single-node clusters must have a single master node and no workers."}],"network":[{"id":"api-vip-defined","status":"success","message":"The API virtual IP is not required: User Managed Networking"},{"id":"api-vip-valid","status":"success","message":"The API virtual IP is not required: User Managed Networking"},{"id":"cluster-cidr-defined","status":"success","message":"The Cluster Network CIDR is defined."},{"id":"dns-domain-defined","status":"success","message":"The base domain is defined."},{"id":"ingress-vip-defined","status":"success","message":"The Ingress virtual IP is not required: User Managed Networking"},{"id":"ingress-vip-valid","status":"success","message":"The Ingress virtual IP is not required: User Managed Networking"},{"id":"machine-cidr-defined","status":"pending","message":"Hosts have not been discovered yet"},{"id":"machine-cidr-equals-to-calculated-cidr","status":"success","message":"The Cluster Machine CIDR is not required: User Managed Networking"},{"id":"network-prefix-valid","status":"success","message":"The Cluster Network prefix is valid."},{"id":"network-type-valid","status":"success","message":"The cluster has a valid network type"},{"id":"no-cidrs-overlapping","status":"pending","message":"At least one of the CIDRs (Cluster Network, Service Network) is undefined."},{"id":"ntp-server-configured","status":"success","message":"No ntp problems found"},{"id":"service-cidr-defined","status":"success","message":"The Service Network CIDR is defined."}],"operators":[{"id":"cnv-requirements-satisfied","status":"success","message":"cnv is disabled"},{"id":"lso-requirements-satisfied","status":"success","message":"lso is disabled"},{"id":"ocs-requirements-satisfied","status":"success","message":"ocs is disabled"}]}
-vip_dhcp_allocation: False
-```
 #### Bootstrap Process
 
-- Ignition file inside the ISO (iso/images/ignition.img)
+- CoreOS will boot as liveCD mode with a ignition file
+- Sample ignition file looks like below:
 	
 	```yaml
 	{
@@ -100,7 +99,7 @@ vip_dhcp_allocation: False
 	          Environment=https_proxy=
 	          Environment=NO_PROXY=
 	          Environment=no_proxy=
-	          Environment=PULL_SECRET_TOKEN=b3BlbnNoaWZ0LXJlbGVhc2UtZGV2K29jbV9hY2Nlc3NfNDdjYWRhMzI2Y2EwNGViM2FlNjJiZGFmYzAwZGI1YWU6RTk2MTNWVjhHU1VHRlpQQjhaTTg1NlRRUUJTTFBPWk9XUDhTUjdVVDE1V0E1TzM0VVRJUllDMDRKTUswTFNNOQ==
+	          Environment=PULL_SECRET_TOKEN==
 	          TimeoutStartSec=1800
 	          ExecStartPre=/usr/local/bin/agent-fix-bz1964591 registry.redhat.io/rhai-tech-preview/assisted-installer-agent-rhel8:v1.0.0-54
 	          ExecStartPre=podman run --privileged --rm -v /usr/local/bin:/hostbin registry.redhat.io/rhai-tech-preview/assisted-installer-agent-rhel8:v1.0.0-54 cp /usr/bin/agent /hostbin
@@ -443,6 +442,129 @@ vip_dhcp_allocation: False
 	- pre-network-manager-config.service
 	- agent.service
 
+	pre-network-manager-config.service will configure the ststic IP.
+		
+- agent.service
+
+	The agenet.service runs as an agent to communicate with assisted service API to get following instructions one by one to bootstrap the cluster. 
+	Sample logs for the whole process: [sno-ai-agent.log](sno-ai-agent.log)
+	Following are some of the important steps and its commands:
+	
+	- inventory
+	
+	```shell
+	cp /etc/mtab /root/mtab && podman run --privileged --net=host --rm --quiet \
+	-v /var/log:/var/log -v /run/udev:/run/udev -v /dev/disk:/dev/disk \
+	-v /run/systemd/journal/socket:/run/systemd/journal/socket \
+	-v /var/log:/host/var/log:ro -v /proc/meminfo:/host/proc/meminfo:ro \
+	-v /sys/kernel/mm/hugepages:/host/sys/kernel/mm/hugepages:ro \
+	-v /proc/cpuinfo:/host/proc/cpuinfo:ro -v /root/mtab:/host/etc/mtab:ro \
+	-v /sys/block:/host/sys/block:ro -v /sys/devices:/host/sys/devices:ro \
+	-v /sys/bus:/host/sys/bus:ro -v /sys/class:/host/sys/class:ro \
+	-v /run/udev:/host/run/udev:ro -v /dev/disk:/host/dev/disk:ro \
+	registry.redhat.io/rhai-tech-preview/assisted-installer-agent-rhel8:v1.0.0-54 inventory
+	```
+	- domain-resolution
+	
+	```shell
+	podman run --privileged --net=host --rm --quiet -v /var/log:/var/log \
+	-v /run/systemd/journal/socket:/run/systemd/journal/socket \
+	registry.redhat.io/rhai-tech-preview/assisted-installer-agent-rhel8:v1.0.0-54 \
+	domain_resolution -request 
+	{"domains":[
+		{"domain_name":"api.sno-ai-test.cloud.lab.eng.bos.redhat.com"}, \
+		{"domain_name":"api-int.sno-ai-test.cloud.lab.eng.bos.redhat.com"}, \
+		{"domain_name":"console-openshift-console.apps.sno-ai-test.cloud.lab.eng.bos.redhat.com"}
+	]}
+	```
+	- free-network-addresses
+	
+	```shell
+	 podman ps --format '{{.Names}}' | grep -q '^free_addresses_scanner$' \
+	 || 
+	 podman run --privileged --net=host --rm --quiet --name free_addresses_scanner \
+	  -v /var/log:/var/log -v /run/systemd/journal/socket:/run/systemd/journal/socket \
+	  registry.redhat.io/rhai-tech-preview/assisted-installer-agent-rhel8:v1.0.0-54 \
+	  free_addresses '[\"10.19.136.0/21\"]']
+	```
+	- ntp-synchronizer
+
+	```shell
+	podman run --privileged --net=host --rm -v /var/log:/var/log \
+	-v /run/systemd/journal/socket:/run/systemd/journal/socket \
+	-v /var/run/chrony:/var/run/chrony \
+	registry.redhat.io/rhai-tech-preview/assisted-installer-agent-rhel8:v1.0.0-54 \
+	ntp_synchronizer {\"ntp_source\":\"\"}
+	```
+	
+	Once the steps above completed, the AI SaaS UI will display the host/cluster information, select the network detected and start the installation, then the agent will get insttructions below:
+	
+	- container-image-availability
+	
+	```shell
+	podman ps --format '{{.Names}}' | grep -q '^container_image_availability$' 
+	|| 
+	podman run --privileged --net=host --rm --quiet --pid=host \
+	--name container_image_availability -v /var/log:/var/log \
+	-v /run/systemd/journal/socket:/run/systemd/journal/socket \
+	registry.redhat.io/rhai-tech-preview/assisted-installer-agent-rhel8:v1.0.0-54 \
+	container_image_availability \
+	--request \
+	  '{
+	  "images":
+		["quay.io/openshift-release-dev/ocp-release:4.8.2-x86_64",\
+		  "quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:216598b8db43a3d009a2635d3fc7abf8d3578c5e4525879952336579906338bb",\
+		  "quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:68bb88201fbf54c8c9709f224d2daaada8e7420f339e5c54d0628914c4401ebb", \
+		  "registry.redhat.io/rhai-tech-preview/assisted-installer-rhel8:v1.0.0-81" \
+		],
+	  "timeout":960
+	 }'
+	```
+	- installation-disk-speed-check
+	
+	```shell
+	
+	id=`podman ps --quiet --filter \"name=disk_performance\"` ; test ! -z \"$id\" 
+	|| timeout 480.000000 podman run --privileged --rm --quiet -v /dev:/dev:rw \
+	-v /var/log:/var/log -v /run/systemd/journal/socket:/run/systemd/journal/socket \
+	--name disk_performance \
+	registry.redhat.io/rhai-tech-preview/assisted-installer-agent-rhel8:v1.0.0-54 \
+	disk_speed_check 
+	'{\"path\":\"/dev/disk/by-id/wwn-0x600304801dd989032809c2b0088dd308\"}'
+	
+	```
+	- install
+
+	```shell
+	dd if=/dev/zero of=/dev/disk/by-id/wwn-0x600304801dd989032809c2b0088dd308 bs=512 count=1 ; \
+	podman run --privileged \
+	--pid=host --net=host --name=assisted-installer \
+	--volume /dev:/dev:rw \
+	--volume /opt:/opt:rw \
+	--volume /var/log:/var/log:rw \
+	--volume /run/systemd/journal/socket:/run/systemd/journal/socket \
+	--env=PULL_SECRET_TOKEN \
+		registry.redhat.io/rhai-tech-preview/assisted-installer-rhel8:v1.0.0-81 \
+	--role bootstrap \
+	--cluster-id 865d38c2-335e-4353-9c75-cc8f2f03c527 \
+	--host-id d97f6435-7934-fd67-8741-3ab09a398792 \
+	--boot-device /dev/disk/by-id/wwn-0x600304801dd989032809c2b0088dd308 \
+	--url https://api.openshift.com --openshift-version 4.8.2 \
+	--high-availability-mode None \
+	--mco-image quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:216598b8db43a3d009a2635d3fc7abf8d3578c5e4525879952336579906338bb \
+	--controller-image registry.redhat.io/rhai-tech-preview/assisted-installer-reporter-rhel8:v1.0.0-82 \
+	--agent-image registry.redhat.io/rhai-tech-preview/assisted-installer-agent-rhel8:v1.0.0-54 \
+	--must-gather-image '{
+		"cnv":"registry.redhat.io/container-native-virtualization/cnv-must-gather-rhel8:v2.6.5", \
+		"lso":"registry.redhat.io/openshift4/ose-local-storage-mustgather-rhel8", \
+		"ocp":"quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:68bb88201fbf54c8c9709f224d2daaada8e7420f339e5c54d0628914c4401ebb", \
+		"ocs":"registry.redhat.io/ocs4/ocs-must-gather-rhel8"}' \
+	--check-cluster-version \
+	--installer-args '[\"--append-karg\",\"ip=eno1:dhcp\"]
+	
+	```
+
+After this step, the assisted-installer-rhel8 container above will bootstrap the openshift cluster. 
 
 ### Manual Deployment
 
