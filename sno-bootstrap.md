@@ -358,8 +358,8 @@ TODO: add process about how assisted-installer-rhel8 persist the image to the di
 
 - 1: https://console.redhat.com/openshift/assisted-installer/clusters/~new 
 - 2: https://github.com/openshift/assisted-service/blob/master/docs/user-guide/restful-api-guide.md 
-- [3]: https://github.com/karmab/assisted-installer-cli 
-- [4]: https://github.com/openshift/enhancements/blob/master/enhancements/workload-partitioning/management-workload-partitioning.md#example-manifests 
-- [5]: https://docs.openshift.com/container-platform/4.8/networking/k8s_nmstate/k8s-nmstate-updating-node-network-config.html#virt-example-nmstate-IP-management-static_k8s_nmstate-updating-node-network-config 
-- [6]: https://github.com/openshift/assisted-service/blob/master/internal/ignition/ignition.go 
+- 3: https://github.com/karmab/assisted-installer-cli 
+- 4: https://github.com/openshift/enhancements/blob/master/enhancements/workload-partitioning/management-workload-partitioning.md#example-manifests 
+- 5: https://docs.openshift.com/container-platform/4.8/networking/k8s_nmstate/k8s-nmstate-updating-node-network-config.html#virt-example-nmstate-IP-management-static_k8s_nmstate-updating-node-network-config 
+- 6: https://github.com/openshift/assisted-service/blob/master/internal/ignition/ignition.go 
 
