@@ -209,9 +209,9 @@
 	        "name": "root"
 	      },
 	      "contents": { "source": "3c:ec:ef:1c:f1:12=eno1"}
-		    }]
-		  }
-		}
+	    }]
+	  }
+	}
 	```	
 	
 	The systemd services above will be provisioned/enabled and started as the ignition tasks to start the installation process.
