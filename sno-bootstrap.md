@@ -72,7 +72,7 @@
 #### Bootstrap Process
 
 - CoreOS will boot as liveCD mode with a ignition file
-- Sample ignition file looks like [here](sno-ai-ignition.json), the key element are:
+- Sample ignition file looks like [here](sno-ai-ignition.json), source code: [[6]](https://github.com/openshift/assisted-service/blob/master/internal/ignition/ignition.go), the key element are:
 	
 	```yaml
 	{
