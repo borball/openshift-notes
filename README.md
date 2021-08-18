@@ -5,7 +5,7 @@
 - [ACM downstream connected](acm-downstream-connected.md)
 - [Local Storage](openshift-local-storage.md)
 - [ACM Spoke](acm-spoke.md)
-- [SNO with installer](sno-with-installer.md)
+- [SNO Bootstrap Process](sno-bootstrap.md)
 - [Useful Commands](useful-commands.md)
 
 
