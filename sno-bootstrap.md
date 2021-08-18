@@ -72,7 +72,7 @@
 #### Bootstrap Process
 
 - CoreOS will boot as liveCD mode with a ignition file
-- Sample ignition file looks like below:
+- Sample ignition file looks like [here](sno-ai-ignition.json), the key element are:
 	
 	```yaml
 	{
@@ -93,13 +93,6 @@
 	          Restart=always
 	          RestartSec=3
 	          StartLimitInterval=0
-	          Environment=HTTP_PROXY=
-	          Environment=http_proxy=
-	          Environment=HTTPS_PROXY=
-	          Environment=https_proxy=
-	          Environment=NO_PROXY=
-	          Environment=no_proxy=
-	          Environment=PULL_SECRET_TOKEN==
 	          TimeoutStartSec=1800
 	          ExecStartPre=/usr/local/bin/agent-fix-bz1964591 registry.redhat.io/rhai-tech-preview/assisted-installer-agent-rhel8:v1.0.0-54
 	          ExecStartPre=podman run --privileged --rm -v /usr/local/bin:/hostbin registry.redhat.io/rhai-tech-preview/assisted-installer-agent-rhel8:v1.0.0-54 cp /usr/bin/agent /hostbin
@@ -153,21 +146,6 @@
 	          "name": "root"
 	      },
 	      "contents": { "source": "
-	          #!/usr/bin/sh
-	
-	          # This script is a workaround for bugzilla 1964591 where symlinks inside /var/lib/containers/ get
-	          # corrupted under some circumstances.
-	          #
-	          # In order to let agent.service start correctly we are checking here whether the requested
-	          # container image exists and in case "podman images" returns an error we try removing the faulty
-	          # image.
-	          #
-	          # In such a scenario agent.service will detect the image is not present and pull it again. In case
-	          # the image is present and can be detected correctly, no any action is required.
-	
-	          IMAGE=$(echo $1 | sed 's/:.*//')
-	          podman images | grep $IMAGE || podman rmi --force $1 || true
-	
 	      " }
 	    },
 	    {
@@ -178,16 +156,6 @@
 	          "name": "root"
 	      },
 	      "contents": { "source": "
-	          **  **  **  **  **  **  **  **  **  **  **  **  **  **  **  **  **  ** **  **  **  **  **  **  **
-	          This is a host being installed by the OpenShift Assisted Installer.
-	          It will be installed from scratch during the installation.
-	
-	          The primary service is agent.service. To watch its status, run:
-	          sudo journalctl -u agent.service
-	
-	          To view the agent log, run:
-	          sudo journalctl TAG=agent
-	          **  **  **  **  **  **  **  **  **  **  **  **  **  **  **  **  **  ** **  **  **  **  **  **  **
 	        " }
 	    },
 	    {
@@ -221,7 +189,7 @@
 	        "user": {
 	            "name": "root"
 	        },
-	        "contents": { "source": "data:text/plain;base64,Cm1vZHVsZSBhc3Npc3RlZCAxLjA7CnJlcXVpcmUgewogICAgICAgIHR5cGUgY2hyb255ZF90OwogICAgICAgIHR5cGUgY29udGFpbmVyX2ZpbGVfdDsKICAgICAgICB0eXBlIHNwY190OwogICAgICAgIGNsYXNzIHVuaXhfZGdyYW1fc29ja2V0IHNlbmR0bzsKICAgICAgICBjbGFzcyBkaXIgc2VhcmNoOwogICAgICAgIGNsYXNzIHNvY2tfZmlsZSB3cml0ZTsKfQojPT09PT09PT09PT09PSBjaHJvbnlkX3QgPT09PT09PT09PT09PT0KYWxsb3cgY2hyb255ZF90IGNvbnRhaW5lcl9maWxlX3Q6ZGlyIHNlYXJjaDsKYWxsb3cgY2hyb255ZF90IGNvbnRhaW5lcl9maWxlX3Q6c29ja19maWxlIHdyaXRlOwphbGxvdyBjaHJvbnlkX3Qgc3BjX3Q6dW5peF9kZ3JhbV9zb2NrZXQgc2VuZHRvOwo=" }
+	        "contents": { }
 	    },
 	    {
 	        "path": "/usr/local/bin/pre-network-manager-config.sh",
@@ -230,196 +198,7 @@
 	        "user": {
 	            "name": "root"
 	        },
-	        "contents": { "source": "
-	            #!/bin/bash
-	            # The directory that contains nmconnection files of all nodes
-	            NMCONNECTIONS_DIR=/etc/assisted/network
-	            MAC_NIC_MAPPING_FILE=mac_interface.ini
-	
-	            if [ ! -d "$NMCONNECTIONS_DIR" ]
-	            then
-	              exit 0
-	            fi
-	
-	            # A map of host mac addresses to interface names
-	            declare -A host_macs_to_hw_iface
-	
-	            # The directory that contains nmconnection files for the current host
-	            host_dir=""
-	
-	            # The mapping file of the current host
-	            mapping_file=""
-	
-	            # A nic-to-mac map created from the mapping file associated with the host
-	            declare -A logical_nic_mac_map
-	
-	            # Find destination directory based on ISO mode
-	            if [[ -f /etc/initrd-release ]]; then
-	              ETC_NETWORK_MANAGER="/run/NetworkManager/system-connections"
-	            else
-	              ETC_NETWORK_MANAGER="/etc/NetworkManager/system-connections"
-	            fi
-	
-	            # remove default connection file create by NM(nm-initrd-generator). This is a WA until
-	            # NM is back to supporting priority between nmconnections
-	            rm -f ${ETC_NETWORK_MANAGER}/*
-	
-	            # Create a map of host mac addresses to their network interfaces
-	            function map_host_macs_to_interfaces() {
-	              SYS_CLASS_NET_DIR='/sys/class/net'
-	              for nic in $( ls $SYS_CLASS_NET_DIR )
-	              do
-	                mac=$(cat $SYS_CLASS_NET_DIR/$nic/address | tr '[:lower:]' '[:upper:]')
-	                host_macs_to_hw_iface[$mac]=$nic
-	              done
-	            }
-	
-	            function find_host_directory_by_mac_address() {
-	              for d in $(ls -d ${NMCONNECTIONS_DIR}/host*)
-	              do
-	                mapping_file="${d}/${MAC_NIC_MAPPING_FILE}"
-	                if [ ! -f $mapping_file ]
-	                then
-	                  echo "Mapping file '$mapping_file' is missing. Skipping on directory '$d'"
-	                  continue
-	                fi
-	
-	                # check if mapping file contains mac-address that exists on the current host
-	                for mac_address in $(cat $mapping_file | cut -d= -f1 | tr '[:lower:]' '[:upper:]')
-	                do
-	                  if [[ ! -z "${host_macs_to_hw_iface[${mac_address}]:-}" ]]
-	                  then
-	                    host_dir=$(mktemp -d)
-	                    cp ${d}/* $host_dir
-	                    return
-	                  fi
-	                done
-	              done
-	
-	              if [ -z "$host_dir" ]
-	              then
-	                echo "None of host directories are a match for the current host"
-	                exit 0
-	              fi
-	            }
-	
-	            function set_logical_nic_mac_mapping() {
-	              # initialize logical_nic_mac_map with mapping file entries
-	              readarray -t lines < "${mapping_file}"
-	              for line in "${lines[@]}"
-	              do
-	                mac=${line%%=*}
-	                nic=${line#*=}
-	                logical_nic_mac_map[$nic]=${mac^^}
-	              done
-	            }
-	
-	            # Replace logical interface name in nmconnection files with the interface name from the mapping file
-	            # of host's directory. Replacement is done based on mac-address matching
-	            function update_interface_names_by_mapping_file() {
-	
-	              # iterate over host's nmconnection files and replace logical interface name with host's nic name
-	              for nmconn_file in $(ls -1 ${host_dir}/*.nmconnection)
-	              do
-	                # iterate over mapping to find nmconnection files with logical interface name
-	                for nic in "${!logical_nic_mac_map[@]}"
-	                do
-	                  mac=${logical_nic_mac_map[$nic]}
-	
-	                  # the pattern should match '=eth0' (interface name) or '=eth0.' (for vlan devices)
-	                  if grep -q -e "=$nic$" -e "=$nic\." "$nmconn_file"
-	                  then
-	                    # get host interface name
-	                    host_iface=${host_macs_to_hw_iface[$mac]}
-	                    if [ -z "$host_iface" ]
-	                    then
-	                      echo "Mapping file contains MAC Address '$mac' (for logical interface name '$nic') that doesn't exist on the host"
-	                      continue
-	                    fi
-	
-	                    # replace logical interface name with host interface name
-	                    sed -i -e "s/=$nic$/=$host_iface/g" -e "s/=$nic\./=$host_iface\./g" $nmconn_file
-	                  fi
-	                done
-	              done
-	            }
-	
-	            function copy_nmconnection_files_to_nm_config_dir() {
-	              for nmconn_file in $(ls -1 ${host_dir}/*.nmconnection)
-	              do
-	                # rename nmconnection files based on the actual interface name
-	                filename=$(basename $nmconn_file)
-	                prefix="${filename%%.*}"
-	                extension="${filename#*.}"
-	                if [ ! -z "${logical_nic_mac_map[$prefix]}" ]
-	                then
-	                  dir_path=$(dirname $nmconn_file)
-	                  mac_address=${logical_nic_mac_map[$prefix]}
-	                  host_iface=${host_macs_to_hw_iface[$mac_address]}
-	                  if [ ! -z "$host_iface" ]
-	                  then
-	                    mv $nmconn_file "${dir_path}/${host_iface}.${extension}"
-	                  fi
-	                fi
-	              done
-	
-	              cp ${host_dir}/*.nmconnection ${ETC_NETWORK_MANAGER}/
-	            }
-	
-	            map_host_macs_to_interfaces
-	            find_host_directory_by_mac_address
-	            set_logical_nic_mac_mapping
-	            update_interface_names_by_mapping_file
-	            copy_nmconnection_files_to_nm_config_dir
-	
-	        
-	        "}
-	    },
-	    {
-	      "path": "/etc/assisted/network/host0/eno1.nmconnection",
-	      "mode": 384,
-	      "overwrite": true,
-	      "user": {
-	        "name": "root"
-	      },
-	      "contents": { "source": "
-	          [connection]
-	          id=eno1
-	          uuid=871d1b2d-0776-40a9-b02e-cfd83d07fca8
-	          type=ethernet
-	          interface-name=eno1
-	          permissions=
-	          autoconnect=true
-	          autoconnect-priority=1
-	
-	          [ethernet]
-	          auto-negotiate=true
-	          cloned-mac-address=3C:EC:EF:1C:F1:12
-	          mac-address-blacklist=
-	          mtu=1500
-	
-	          [ipv4]
-	          address1=10.19.142.218/21
-	          dhcp-client-id=mac
-	          dns=10.19.143.247;
-	          dns-priority=40
-	          dns-search=
-	          method=manual
-	          route1=10.19.136.0/21,10.19.143.254
-	          route1_options=table=254
-	          route2=0.0.0.0/0,10.19.143.254
-	          route2_options=table=254
-	
-	          [ipv6]
-	          addr-gen-mode=eui64
-	          dhcp-duid=ll
-	          dhcp-iaid=mac
-	          dns-search=
-	          method=disabled
-	
-	          [proxy]
-	
-	
+	        "contents": { "source": 	
 	      "}
 	    },
 	    {
@@ -434,6 +213,8 @@
 		  }
 		}
 	```	
+	
+	The systemd services above will be provisioned/enabled and started as the ignition tasks to start the installation process.
 
 - systemd
 
@@ -447,8 +228,7 @@
 - agent.service
 
 	The agenet.service runs as an agent to communicate with assisted service API to get following instructions one by one to bootstrap the cluster. 
-	Sample logs for the whole process: [sno-ai-agent.log](sno-ai-agent.log)
-	Following are some of the important steps and its commands:
+	Sample logs for the whole process: [sno-ai-agent.log](sno-ai-agent.log), following are some of the important steps and its commands:
 	
 	- inventory
 	
@@ -566,7 +346,12 @@
 
 After this step, the assisted-installer-rhel8 container above will bootstrap the openshift cluster. 
 
+#### Assisted Installer
+
+TODO: add process about how assisted-installer-rhel8 persist the image to the disk and bootstrap the cluster. 
+
 ### Manual Deployment
+
 
 
 ### Reference
