@@ -1,5 +1,9 @@
 ## SNO Bootstrap Process
 
+- [SNO AI SaaS](#ai-saas)
+- [SNO Manual Deployment](#manual-deployment)
+
+
 ### AI SaaS
 
 #### General steps
