@@ -1,4 +1,4 @@
-## SNO Bootstrap Process
+## SNO Bootstrap Process (WIP)
 
 - [SNO AI SaaS](#ai-saas)
 - [SNO Manual Deployment](#manual-deployment)
