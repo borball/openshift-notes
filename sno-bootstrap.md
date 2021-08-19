@@ -352,7 +352,7 @@ TODO: add process about how assisted-installer-rhel8 persist the image to the di
 
 ### Manual Deployment
 
-
+TODO: add bootdtrap process for SNO manual deployment
 
 ### Reference
 
