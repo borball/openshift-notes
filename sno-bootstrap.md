@@ -281,7 +281,7 @@
 	ntp_synchronizer {\"ntp_source\":\"\"}
 	```
 	
-	Once the steps above completed, the AI SaaS UI will display the host/cluster information, select the network detected and start the installation, then the agent will get insttructions below:
+	Once the steps above completed, the AI SaaS UI will display the host/cluster information, select the network detected and start the installation, then the agent will get installation insttructions from AI service as displayed below:
 	
 	- container-image-availability
 	
